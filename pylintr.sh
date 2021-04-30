@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #-----------------------------------------------------------------------
 # Prog:     pylintr.sh
-# Version:  0.2.0
+# Version:  0.2.1
 # Desc:     This script walks down a project tree searching for all
 #           *.py files and runs pylint over each file, using the default
 #           pylint config file and stores the report to the defined
@@ -26,6 +26,13 @@
 # 17.01.19  J. Berendt  0.1.2  Converted line endings to Unix format.
 # 10.06.20  J. Berendt  0.2.0  Updated to use the local .pylintrc file
 #                              if available.
+# 30.04.21  J. Berendt  0.2.1  1) Updated the output files to contain 
+#                              the parent directory's name 
+#                              (if applicable)to prevent modules with 
+#                              the same name from being overwritten.
+#                              2) Updated the filename filter to allow
+#                              files with an underscore after the first
+#                              character. For example: test_thing1.py
 #-----------------------------------------------------------------------
 
 EXT=".plr"
@@ -50,10 +57,12 @@ fi
 
 # RUN PYLINT OVER ALL *.PY FILES
 for f in $( /usr/bin/find ../ -name "*.py" ); do
-    base=$( basename ${f} )
-    if [[ ${base} =~ ^[a-z]+\.py ]]; then
+    bname=$( basename ${f} )
+    dname=$( basename $( dirname ${f} ) )_
+    [ $dname = ".._" ] && dname=""
+    if [[ ${bname} =~ ^[a-z][a-z_]+\.py ]]; then
         echo Processing: ${f}
-        outname=$( echo ${base} | sed s/.py// )${EXT}
+        outname=${dname}$( echo ${bname} | sed s/.py// )${EXT}
         pylint "${rcfile}" ${f} > "${OUTPUT}/${outname}"
     fi
 done
