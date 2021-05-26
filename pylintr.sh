@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #-----------------------------------------------------------------------
 # Prog:     pylintr.sh
-# Version:  0.2.1
+# Version:  0.3.0
 # Desc:     This script walks down a project tree searching for all
 #           *.py files and runs pylint over each file, using the default
 #           pylint config file and stores the report to the defined
@@ -33,6 +33,8 @@
 #                              2) Updated the filename filter to allow
 #                              files with an underscore after the first
 #                              character. For example: test_thing1.py
+# 26.05.21  J. Berendt  0.3.0  Updated to print a second summary; 
+#                              showing pylintr scores less than 10;
 #-----------------------------------------------------------------------
 
 EXT=".plr"
@@ -55,8 +57,8 @@ fi
 # Determine which .pylintrc file to use.
 [ -f "../.pylintrc" ] && rcfile='--rcfile=../.pylintrc' || rcfile=""
 
-# RUN PYLINT OVER ALL *.PY FILES
-for f in $( /usr/bin/find ../ -name "*.py" ); do
+# RUN PYLINT OVER ALL *.PY FILES (EXCLUDE docs DIRECTORY)
+for f in $( /usr/bin/find ../ -name "*.py" | grep -v "docs" ); do
     bname=$( basename ${f} )
     dname=$( basename $( dirname ${f} ) )_
     [ $dname = ".._" ] && dname=""
@@ -66,9 +68,6 @@ for f in $( /usr/bin/find ../ -name "*.py" ); do
         pylint "${rcfile}" ${f} > "${OUTPUT}/${outname}"
     fi
 done
-
-echo Done.
-echo
 
 # READ EACH REPORT AND POPULATE RESULTS TO SUMMARY
 echo Pylint Summary: > ${SUMMARY}
@@ -85,4 +84,12 @@ echo Run date: $( date ) >> ${SUMMARY}
 
 # PRINT SUMMARY
 cat ${SUMMARY}
-echo
+printf "\n"
+
+# PRINT SUMMARY 2
+printf "Scores < 10 Summary:\n"
+echo "---------------------"
+grep ".plr:" ${SUMMARY} | grep -v "10.00/10"
+echo "---------------------"
+printf "\nDone.\n\n"
+
